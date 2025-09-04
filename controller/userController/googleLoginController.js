@@ -10,7 +10,7 @@ const GOOGLE_REDIRECT_URI = process.env.GOOGLE_REDIRECT_URI;
 const FRONTEND_URL = process.env.FRONTEND_URL;
 const JWT_SECRET = process.env.JWT_SECRET;
 const qs = require("querystring");
-const encrypt = require("../../authService/encrption");
+
 
 const redirectToGoogle = (req, res) => {
   const googleAuthURL =
@@ -103,20 +103,9 @@ const googleCallback = async (req, res) => {
 
     setTokenCookie(res, token, middlewareToken);
 
-    const userData = JSON.stringify({
-      fullName: user.fullName,
-      email: user.email,
-      role: user.role,
-      tokensRemaining: user.tokensRemaining,
-      tokenUsed: user.tokenUsed,
-      requestCount: user.requestCount,
-      hasPremiumAccess: user.hasPremiumAccess
-    });
-    const encrypted = encrypt(userData);
+   
 
-    res.redirect(
-      `${FRONTEND_URL}/?data=${encodeURIComponent(encrypted)}`
-    );
+      res.redirect(FRONTEND_URL);
   } catch (error) {
     console.error(error);
     res.status(500).json({ message: "Internal Server Error" });
