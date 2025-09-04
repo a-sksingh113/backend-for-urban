@@ -5,7 +5,7 @@ const clearTokenCookie = (res) => {
     serialize("token", "", {
     //    domain:".example.com",
       httpOnly: true,
-      secure: false,
+      secure: true,
       sameSite: "none",
       path: "/",
       expires: new Date(0),
@@ -13,8 +13,8 @@ const clearTokenCookie = (res) => {
     serialize("token_middleware", "", {
     //    domain:".example.com",
       httpOnly: false,
-      secure: false,
-      sameSite: "lax",
+      secure: true,
+      sameSite: "none",
       path: "/",
       expires: new Date(0),
     }),
