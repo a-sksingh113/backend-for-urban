@@ -284,7 +284,7 @@ const handleCreateProblem = async (req, res) => {
         availability: "yes",
         user_ratings_total: 20,
         formatted_phone_number: "+91 9876543210",
-        website: "https://dummyshop1.example.com",
+        website: "https://example.com",
         bussiness_shop_image:
           "https://hzjqbvjwneamcdxyftep.supabase.co/storage/v1/object/public/user-uploads/2843b2d2-c3d0-4ceb-9ebc-0430cfe3c895.png",
       },
@@ -297,7 +297,7 @@ const handleCreateProblem = async (req, res) => {
         availability: "yes",
         user_ratings_total: 15,
         formatted_phone_number: "+91 9123456780",
-        website: "https://dummyshop2.example.com",
+        website: "https://example.com/",
         bussiness_shop_image:
           "https://hzjqbvjwneamcdxyftep.supabase.co/storage/v1/object/public/user-uploads/ce9ce6a7-2f37-491a-b344-f35a3e1aed9a.png",
       },
@@ -310,7 +310,7 @@ const handleCreateProblem = async (req, res) => {
         availability: "yes",
         user_ratings_total: 15,
         formatted_phone_number: "+91 9123566780",
-        website: "https://dummyshop3.example.com",
+        website: "https://example.com",
         bussiness_shop_image:
           "https://hzjqbvjwneamcdxyftep.supabase.co/storage/v1/object/public/user-uploads/e55eb955-55e2-4b40-8d91-fbd6f2826dab.png",
       },
@@ -323,7 +323,7 @@ const handleCreateProblem = async (req, res) => {
         availability: "yes",
         user_ratings_total: 15,
         formatted_phone_number: "+91 9123454660",
-        website: "https://dummyshop4.example.com",
+        website: "https://example.com",
         bussiness_shop_image:
           "https://hzjqbvjwneamcdxyftep.supabase.co/storage/v1/object/public/user-uploads/14fc2c18-3371-4aa8-9684-ce0b83b61494.png://dummyshop4.example.com/image.jpg",
       },
@@ -336,7 +336,7 @@ const handleCreateProblem = async (req, res) => {
         availability: "yes",
         user_ratings_total: 15,
         formatted_phone_number: "+91 9123456745",
-        website: "https://dummyshop5.example.com",
+        website: "https://example.com",
         bussiness_shop_image:
           "https://hzjqbvjwneamcdxyftep.supabase.co/storage/v1/object/public/user-uploads/a02cd627-1123-4e6f-9e38-c642e1b3a7b4.png",
       },
@@ -350,7 +350,7 @@ const handleCreateProblem = async (req, res) => {
         availability: "yes",
         user_ratings_total: 15,
         formatted_phone_number: "+91 9123456745",
-        website: "https://dummyshop5.example.com",
+        website: "https://example.com",
         bussiness_shop_image:
           "https://hzjqbvjwneamcdxyftep.supabase.co/storage/v1/object/public/user-uploads/8801179b-f69e-4b13-94e0-0a593acb1328.png",
       },
@@ -363,7 +363,7 @@ const handleCreateProblem = async (req, res) => {
         availability: "yes",
         user_ratings_total: 15,
         formatted_phone_number: "+91 9123456745",
-        website: "https://dummyshop5.example.com",
+        website: "https://example.com",
         bussiness_shop_image:
           "https://hzjqbvjwneamcdxyftep.supabase.co/storage/v1/object/public/user-uploads/5bda69cb-f054-4abf-baa8-0c6d69e7e496.png",
       },
@@ -376,7 +376,7 @@ const handleCreateProblem = async (req, res) => {
         availability: "yes",
         user_ratings_total: 15,
         formatted_phone_number: "+91 9123456745",
-        website: "https://dummyshop5.example.com",
+        website: "https://example.com",
         bussiness_shop_image:
           "https://hzjqbvjwneamcdxyftep.supabase.co/storage/v1/object/public/user-uploads/a02cd627-1123-4e6f-9e38-c642e1b3a7b4.png",
       },
@@ -390,7 +390,7 @@ const handleCreateProblem = async (req, res) => {
         availability: "yes",
         user_ratings_total: 15,
         formatted_phone_number: "+91 9123456745",
-        website: "https://dummyshop5.example.com",
+        website: "https://example.com",
         bussiness_shop_image:
           "https://hzjqbvjwneamcdxyftep.supabase.co/storage/v1/object/public/user-uploads/5bda69cb-f054-4abf-baa8-0c6d69e7e496.png",
       },
@@ -404,7 +404,7 @@ const handleCreateProblem = async (req, res) => {
         availability: "yes",
         user_ratings_total: 15,
         formatted_phone_number: "+91 9123456745",
-        website: "https://dummyshop5.example.com",
+        website: "https://example.com",
         bussiness_shop_image:
           "https://hzjqbvjwneamcdxyftep.supabase.co/storage/v1/object/public/user-uploads/a02cd627-1123-4e6f-9e38-c642e1b3a7b4.png",
       },
