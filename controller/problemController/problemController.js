@@ -312,7 +312,7 @@ const handleCreateProblem = async (req, res) => {
         formatted_phone_number: "+91 9123566780",
         website: "https://dummyshop3.example.com",
         bussiness_shop_image:
-          "https://hzjqbvjwneamcdxyftep.supabase.co/storage/v1/object/public/user-uploads/e55eb955-55e2-4b40-8d91-fbd6f2826dab.png",
+          "https://hzjqbvjwneamcdxyftep.supabase.co/storage/v1/object/public/user-uploads/2843b2d2-c3d0-4ceb-9ebc-0430cfe3c895.png",
       },
       {
         place_id: "dummy_4",
