@@ -11,7 +11,6 @@ const FRONTEND_URL = process.env.FRONTEND_URL;
 const JWT_SECRET = process.env.JWT_SECRET;
 const qs = require("querystring");
 
-
 const redirectToGoogle = (req, res) => {
   const googleAuthURL =
     `https://accounts.google.com/o/oauth2/v2/auth?` +
@@ -103,7 +102,6 @@ const googleCallback = async (req, res) => {
 
     setTokenCookie(res, token, middlewareToken);
 
-   
 
       res.redirect(FRONTEND_URL);
   } catch (error) {

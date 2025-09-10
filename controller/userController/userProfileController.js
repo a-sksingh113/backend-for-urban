@@ -1,4 +1,6 @@
+const bcrypt = require("bcryptjs");
 const User = require("../../model/userModel/userModel");
+const { sendPasswordChangeEmail, sendUpdateProfileEmail } = require("../../emailService/authEmail");
 
 const handleGetProfile = async (req, res) => {
   try {
@@ -46,6 +48,8 @@ const handleUpdateProfile = async (req, res) => {
     }
 
     await user.save();
+
+    await sendUpdateProfileEmail(user.email);
     const { password, ...userData } = user.toJSON();
 
     console.log("Updated User Data:", userData);
@@ -66,7 +70,53 @@ const handleUpdateProfile = async (req, res) => {
 };
 
 
+
+const handleChangePassword = async (req, res) => {
+  try {
+    const userId = req.user.id;
+    const { oldPassword, newPassword } = req.body;
+
+    if (!oldPassword || !newPassword) {
+      return res
+        .status(400)
+        .json({ success: false, message: "Both old and new passwords are required" });
+    }
+
+    const user = await User.findByPk(userId);
+    if (!user) {
+      return res.status(404).json({ success: false, message: "User not found" });
+    }
+
+    const isMatch = await bcrypt.compare(oldPassword, user.password);
+    if (!isMatch) {
+      return res
+        .status(401)
+        .json({ success: false, message: "Old password is incorrect" });
+    }
+
+    const salt = await bcrypt.genSalt(10);
+    user.password = await bcrypt.hash(newPassword, salt);
+
+    await user.save();
+
+   await sendPasswordChangeEmail(user.email);
+
+    res.json({
+      success: true,
+      message: "Password changed successfully",
+    });
+  } catch (error) {
+    console.error("Change password error:", error);
+    res.status(500).json({
+      success: false,
+      message: "Server error",
+      error: error.message || error,
+    });
+  }
+};
+
 module.exports = {
     handleGetProfile,
-    handleUpdateProfile
+    handleUpdateProfile,
+    handleChangePassword
 }

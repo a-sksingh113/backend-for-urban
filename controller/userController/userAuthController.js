@@ -7,7 +7,7 @@ const {
 } = require("../../authService/authService");
 const setTokenCookie = require("../../authService/setTokenCookie");
 const clearTokenCookie = require("../../authService/clearTokenCookie");
-const { sendForgetPasswordEmail } = require("../../emailService/authEmail");
+const { sendForgetPasswordEmail, sendVerificationEmail, sendPasswordResetSuccessEmail, sendCongratsEmail } = require("../../emailService/authEmail");
 
 const handleSignup = async (req, res) => {
   try {
@@ -24,17 +24,87 @@ const handleSignup = async (req, res) => {
     const newUser = await User.create({
       email,
       password: hashedPassword,
+      isVerified: false,
     });
+    const verifyToken = jwt.sign({ id: newUser.id }, process.env.JWT_SECRET, {
+      expiresIn: "30m",
+    });
+
+    const verifyUrl = `${process.env.FRONTEND_URL}/verify-email/${verifyToken}`;
+
+    await sendVerificationEmail(newUser.email, verifyUrl);
 
     res.status(201).json({
       success: true,
-      message: "User registered successfully",
+      verifyUrl,
+      message:
+        "User registered. Please check your email to verify your account.",
       user: newUser,
     });
   } catch (error) {
     res.status(500).json({ success: false, message: "Server error", error });
   }
 };
+
+
+const handleVerifyEmail = async (req, res) => {
+  try {
+    const { token } = req.params;
+
+    const decoded = jwt.verify(token, process.env.JWT_SECRET);
+    const user = await User.findByPk(decoded.id);
+
+    if (!user) {
+      return res.status(400).json({ success: false, message: "Invalid token" });
+    }
+
+    if (user.isVerified) {
+      return res.status(400).json({ success: false, message: "User already verified" });
+    }
+
+    user.isVerified = true;
+    await user.save();
+
+    await sendCongratsEmail(user.email);
+    res.status(200).json({ success: true, message: "Email verified successfully" });
+  } catch (error) {
+    res.status(400).json({ success: false, message: "Invalid or expired token" });
+  }
+};
+
+const handleResendVerification = async (req, res) => {
+  try {
+    const { email } = req.body;
+
+    const user = await User.findOne({ where: { email } });
+    if (!user) {
+      return res.status(400).json({ success: false, message: "User not found" });
+    }
+
+    if (user.isVerified) {
+      return res.status(400).json({ success: false, message: "User already verified" });
+    }
+
+    const verifyToken = jwt.sign({ id: user.id }, process.env.JWT_SECRET, {
+      expiresIn: "30m",
+    });
+
+    const verifyUrl = `${process.env.FRONTEND_URL}/verify-email/${verifyToken}`;
+
+    await sendVerificationEmail(user.email, verifyUrl);
+
+    return res.status(200).json({
+      success: true,
+      verifyUrl,
+      message: "Verification email resent. Please check your inbox.",
+    });
+  } catch (error) {
+    console.error("Resend verification error:", error);
+    return res.status(500).json({ success: false, message: "Server error" });
+  }
+};
+
+
 
 const handleLogin = async (req, res) => {
   try {
@@ -45,6 +115,12 @@ const handleLogin = async (req, res) => {
       return res
         .status(400)
         .json({ success: false, message: "Invalid credentials" });
+    if (!user.isVerified) {
+      return res.status(400).json({
+        success: false,
+        message: "Please verify your email before logging in.",
+      });
+    }
 
     if (!user.password) {
       return res.status(400).json({
@@ -124,13 +200,13 @@ const handleResetPassword = async (req, res) => {
     user.password = hashedPassword;
     await user.save();
 
+    await sendPasswordResetSuccessEmail(user.email);
+
     res.json({ success: true, message: "Password reset successfully" });
   } catch (error) {
     res.status(500).json({ success: false, message: "Server error", error });
   }
 };
-
-
 
 module.exports = {
   handleSignup,
@@ -138,4 +214,6 @@ module.exports = {
   handleLogout,
   handleForgotPassword,
   handleResetPassword,
+  handleVerifyEmail,
+  handleResendVerification
 };

@@ -38,6 +38,49 @@ const handleGetUserHistory = async (req, res) => {
   }
 };
 
+
+const handleGetUserHistoryById = async (req, res) => {
+  try {
+    const userId = req?.user.id;
+    const { historyId } = req.params;
+
+    if (!userId) {
+      return res.status(400).json({ success: false, message: "User ID is required" });
+    }
+
+    if (!historyId) {
+      return res.status(400).json({ success: false, message: "History ID is required" });
+    }
+
+    const history = await RequestHistory.findOne({
+      where: { id: historyId, userId }, 
+      attributes: ["id", "status", "createdAt"],
+      include: [
+        {
+          model: User,
+          as: "user",
+          attributes: ["id", "tokensRemaining", "requestCount", "tokenUsed"],
+        },
+        {
+          model: Problem,
+          as: "problem",
+          attributes: ["id", "detectedIssue", "imageUrl", "location","createdAt"],
+        },
+      ],
+    });
+
+    if (!history) {
+      return res.status(404).json({ success: false, message: "History not found for this user" });
+    }
+
+    res.status(200).json({ success: true, history });
+  } catch (error) {
+    console.error("Error fetching history by ID:", error);
+    res.status(500).json({ success: false, message: "Server error", error: error.message });
+  }
+};
+
 module.exports = {
   handleGetUserHistory,
+  handleGetUserHistoryById
 };

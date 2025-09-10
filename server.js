@@ -23,9 +23,9 @@ app.use(
   })
 );
 
-app.use(express.json({ limit: "10mb" }));
+app.use(express.json());
 app.use(cookieParser());
-app.use(express.urlencoded({ extended: true, limit: "10mb" }));
+app.use(express.urlencoded({ extended: false }));
 
 const checkForAuthenticationCookie = require("./middleware/authMiddleware");
 const { authorizeRoles } = require("./middleware/roleMiddleware");
