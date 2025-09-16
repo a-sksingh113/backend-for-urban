@@ -29,8 +29,7 @@ function scoreAndFilterPlaces(
     minResults = 3, 
   } = options;
 
-  console.log(`[Filter Debug] Received ${places.length} places`);
-  console.log(`[Filter Debug] Vision labels:`, visionLabels);
+
 
   let mapped = (places || [])
     .filter(p => p && p.rating)
@@ -116,9 +115,6 @@ function scoreAndFilterPlaces(
 
     mapped.push(...remaining.slice(0, minResults - mapped.length));
   }
-
-  console.log(`[Filter Debug] After filtering: ${mapped.length} places kept`);
-  console.log(`[Filter Debug] Top 3 scored places:`, mapped.slice(0, 3));
 
   return mapped;
 }

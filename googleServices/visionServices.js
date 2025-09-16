@@ -10,9 +10,6 @@ async function analyzeImageLabels(imageUrl, topN = 5) {
     return [];
   }
 
-  console.log(`[Vision Debug] Starting label detection for: ${imageUrl}`);
-  console.log(`[Vision Debug] topN requested: ${topN}`);
-
   try {
     const [result] = await visionClient.labelDetection(imageUrl);
 
@@ -21,11 +18,6 @@ async function analyzeImageLabels(imageUrl, topN = 5) {
       return [];
     }
 
-    console.log("[Vision Debug] Raw result keys:", Object.keys(result));
-    console.log(
-      "[Vision Debug] Label annotations count:",
-      result.labelAnnotations?.length || 0
-    );
 
     const labels = (result.labelAnnotations || [])
       .sort((a, b) => (b.score || 0) - (a.score || 0))
@@ -35,7 +27,7 @@ async function analyzeImageLabels(imageUrl, topN = 5) {
         score: l.score,
       }));
 
-    console.log("[Vision Debug] Final labels:", labels);
+
     return labels;
   } catch (err) {
     console.error(

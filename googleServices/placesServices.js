@@ -33,7 +33,7 @@ async function findNearbyPlaces(location, keyword, radius) {
     });
 
     const places = resp.data.places || [];
-    console.log("[Places Debug] Results Count:", places.length);
+ 
 
     if (places.length > 0) {
       console.log(

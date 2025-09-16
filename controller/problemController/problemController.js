@@ -67,7 +67,7 @@ const handleCreateProblem = async (req, res) => {
 
        // 2) enhance labels dynamically
     const enhancedQueries = await enhanceLabels(labels);
-    console.log("Enhanced Queries:", enhancedQueries);
+   
 
     // 3) try searching with enhanced queries
     let places = [];
@@ -79,12 +79,11 @@ const handleCreateProblem = async (req, res) => {
       );
       if (placesResp.places?.length) {
         places = placesResp.places;
-        console.log(`Found ${places.length} places for query "${query}"`);
+        
         break; // stop once we get results
       }
     }
 
-    console.log(`Total places found: ${places.length}`);
     // 3) score & filter
     const scored = scoreAndFilterPlaces(
       places,
