@@ -11,7 +11,7 @@ const clearTokenCookie = (res) => {
       expires: new Date(0),
     }),
     serialize("token_middleware", "", {
-     domain:".matchandfix.com",
+    domain:".matchandfix.com",
       httpOnly: false,
       secure: true,
       sameSite: "none",

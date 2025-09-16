@@ -1,42 +1,89 @@
-const axios = require('axios');
+const axios = require("axios");
 
 const PLACES_KEY = process.env.GOOGLE_PLACES_API_KEY;
 if (!PLACES_KEY) {
-  console.warn('Warning: GOOGLE_PLACES_API_KEY not set');
+  console.warn("Warning: GOOGLE_PLACES_API_KEY not set");
 }
 
-async function findNearbyPlaces(location, keyword = '', radius = parseInt(process.env.DEFAULT_PLACES_RADIUS || '5000')) {
-  const url = 'https://maps.googleapis.com/maps/api/place/nearbysearch/json';
-  const params = {
-    key: PLACES_KEY,
-    location: `${location.lat},${location.lng}`,
-    radius,
-    keyword,
-    type: 'establishment',
+
+async function findNearbyPlaces(location, keyword, radius) {
+  const url = "https://places.googleapis.com/v1/places:searchText";
+
+  const body = {
+    textQuery: keyword || "shop",
+    locationBias: {
+      circle: {
+        center: {
+          latitude: parseFloat(location.lat),
+          longitude: parseFloat(location.lng),
+        },
+        radius: radius, 
+      },
+    },
   };
 
   try {
-    const resp = await axios.get(url, { params });
+    const resp = await axios.post(url, body, {
+      headers: {
+        "Content-Type": "application/json",
+        "X-Goog-Api-Key": PLACES_KEY,
+        "X-Goog-FieldMask":
+          "places.id,places.displayName,places.formattedAddress,places.location,places.rating,places.userRatingCount,places.photos",
+      },
+    });
+
+    const places = resp.data.places || [];
+    console.log("[Places Debug] Results Count:", places.length);
+
+    if (places.length > 0) {
+      console.log(
+        "[Places Debug] Sample Results:",
+        JSON.stringify(places.slice(0, 3), null, 2)
+      );
+    } else {
+      console.log("[Places Debug] No places returned by API");
+    }
+
     return resp.data;
   } catch (err) {
-    console.error('placesService.findNearbyPlaces error:', err.response?.data || err.message || err);
+    console.error(
+      "findNearbyPlaces error:",
+      err.response?.data || err.message || err
+    );
     throw err;
   }
 }
 
+async function getPlaceDetails(
+  placeId,
+  fields = [
+    "id",
+    "displayName",
+    "formattedAddress",
+    "internationalPhoneNumber",
+    "websiteUri",
+    "location",
+    "rating",
+    "userRatingCount",
+    "currentOpeningHours",
+    
+  ]
+) {
+  const url = `https://places.googleapis.com/v1/places/${placeId}`;
 
-async function getPlaceDetails(placeId, fields = ['name','formatted_phone_number','website','formatted_address','opening_hours','rating','user_ratings_total']) {
-  const url = 'https://maps.googleapis.com/maps/api/place/details/json';
-  const params = {
-    key: PLACES_KEY,
-    place_id: placeId,
-    fields: fields.join(','),
-  };
   try {
-    const resp = await axios.get(url, { params });
-    return resp.data.result;
+    const resp = await axios.get(url, {
+      headers: {
+        "X-Goog-Api-Key": PLACES_KEY,
+        "X-Goog-FieldMask": fields.join(","),
+      },
+    });
+    return resp.data;
   } catch (err) {
-    console.error('placesService.getPlaceDetails error:', err.response?.data || err.message || err);
+    console.error(
+      "getPlaceDetails error:",
+      err.response?.data || err.message || err
+    );
     throw err;
   }
 }

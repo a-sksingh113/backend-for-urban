@@ -23,10 +23,12 @@
     "jsonwebtoken": "^9.0.2",
     "mongoose": "^8.18.0",
     "multer": "^2.0.2",
+    "natural": "^8.1.0",
     "nodemailer": "^7.0.6",
     "pg": "^8.16.3",
     "pg-hstore": "^2.3.4",
-    "sequelize": "^6.37.7"
+    "sequelize": "^6.37.7",
+    "wordnet-db": "^3.1.14"
   },
   "devDependencies": {
     "nodemon": "^3.1.10"

@@ -1,55 +1,126 @@
-function toRadians(deg) { return (deg * Math.PI) / 180; }
+function toRadians(deg) {
+  return (deg * Math.PI) / 180;
+}
+
 function haversineDistanceMeters(lat1, lon1, lat2, lon2) {
-  const R = 6371000;
+  const R = 6371000; // radius of Earth in meters
   const dLat = toRadians(lat2 - lat1);
   const dLon = toRadians(lon2 - lon1);
-  const a = Math.sin(dLat/2)**2 + Math.cos(toRadians(lat1))*Math.cos(toRadians(lat2)) * Math.sin(dLon/2)**2;
-  const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1-a));
+  const a =
+    Math.sin(dLat / 2) ** 2 +
+    Math.cos(toRadians(lat1)) *
+      Math.cos(toRadians(lat2)) *
+      Math.sin(dLon / 2) ** 2;
+  const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
   return R * c;
 }
 
-
-function scoreAndFilterPlaces(places = [], userLat, userLng, options = {}) {
+function scoreAndFilterPlaces(
+  places = [],
+  userLat,
+  userLng,
+  visionLabels = [],
+  options = {}
+) {
   const {
-    minRating = 3.0,
+    minRating = 2.0,
     maxPriceLevel = 3,
     preferOpenNow = true,
+    minResults = 3, 
   } = options;
 
-  const normalized = (places || [])
-    .filter(p => p && p.rating) 
-    .filter(p => (p.rating >= minRating))
-    .filter(p => (p.price_level === undefined || p.price_level <= maxPriceLevel))
+  console.log(`[Filter Debug] Received ${places.length} places`);
+  console.log(`[Filter Debug] Vision labels:`, visionLabels);
+
+  let mapped = (places || [])
+    .filter(p => p && p.rating)
     .map(p => {
-      const lat = p.geometry?.location?.lat;
-      const lng = p.geometry?.location?.lng;
-      const distanceMeters = (lat && lng) ? haversineDistanceMeters(userLat, userLng, lat, lng) : Number.MAX_SAFE_INTEGER;
+      const lat = p.location?.latitude;
+      const lng = p.location?.longitude;
+      const distanceMeters = lat && lng ? haversineDistanceMeters(userLat, userLng, lat, lng) : Number.MAX_SAFE_INTEGER;
 
       const ratingWeight = (p.rating || 0) * 3;
-      const openBonus = (p.opening_hours && p.opening_hours.open_now) ? 1.5 : 0;
-      const pricePenalty = (p.price_level !== undefined) ? p.price_level * 0.5 : 0;
-      const distancePenalty = (distanceMeters / 1000) * 0.4; // per km penalty
+      const openBonus = p.currentOpeningHours?.openNow ? 1.5 : 0;
+      const distancePenalty = (distanceMeters / 1000) * 0.4;
+      const score = ratingWeight + openBonus - distancePenalty;
 
-      const score = ratingWeight + openBonus - pricePenalty - distancePenalty;
+      const name = (p.displayName?.text || "").toLowerCase();
+      const matchesLabel = visionLabels.some(label => name.includes(label.toLowerCase()));
+
+      let photoUrl = null;
+      if (p.photos && p.photos.length > 0) {
+        const photoName = p.photos[0].name;
+        photoUrl = `https://places.googleapis.com/v1/${photoName}/media?maxHeightPx=400&key=${process.env.GOOGLE_PLACES_API_KEY}`;
+      }
 
       return {
-        place_id: p.place_id,
-        name: p.name,
+        place_id: p.id,
+        name: p.displayName?.text || "Unknown",
         rating: p.rating,
-        user_ratings_total: p.user_ratings_total,
-        price_level: p.price_level,
-        vicinity: p.vicinity || p.formatted_address,
-        location: p.geometry?.location,
-        opening_hours: p.opening_hours || null,
+        user_ratings_total: p.userRatingCount,
+        vicinity: p.formattedAddress,
+        location: p.location,
+        opening_hours: p.currentOpeningHours || null,
         types: p.types || [],
         distanceMeters,
+        photoUrl,
         score,
-        raw: p, 
+        matchesLabel,
+        raw: p,
       };
     });
 
-  normalized.sort((a,b) => b.score - a.score);
-  return normalized;
+  // Step 2: Sort by label match first, then score
+  mapped.sort((a, b) => {
+    if (b.matchesLabel && !a.matchesLabel) return 1;
+    if (a.matchesLabel && !b.matchesLabel) return -1;
+    return b.score - a.score;
+  });
+
+  // Step 3: Ensure minimum results
+  if (mapped.length < minResults) {
+    const remaining = (places || [])
+      .filter(p => !mapped.some(f => f.place_id === p.id))
+      .map(p => {
+        const lat = p.location?.latitude;
+        const lng = p.location?.longitude;
+        const distanceMeters = lat && lng ? haversineDistanceMeters(userLat, userLng, lat, lng) : Number.MAX_SAFE_INTEGER;
+
+        const ratingWeight = (p.rating || 0) * 3;
+        const openBonus = p.currentOpeningHours?.openNow ? 1.5 : 0;
+        const distancePenalty = (distanceMeters / 1000) * 0.4;
+        const score = ratingWeight + openBonus - distancePenalty;
+
+        let photoUrl = null;
+        if (p.photos && p.photos.length > 0) {
+          const photoName = p.photos[0].name;
+          photoUrl = `https://places.googleapis.com/v1/${photoName}/media?maxHeightPx=400&key=${process.env.GOOGLE_PLACES_API_KEY}`;
+        }
+
+        return {
+          place_id: p.id,
+          name: p.displayName?.text || "Unknown",
+          rating: p.rating,
+          user_ratings_total: p.userRatingCount,
+          vicinity: p.formattedAddress,
+          location: p.location,
+          opening_hours: p.currentOpeningHours || null,
+          types: p.types || [],
+          distanceMeters,
+          photoUrl,
+          score,
+          matchesLabel: false,
+          raw: p,
+        };
+      });
+
+    mapped.push(...remaining.slice(0, minResults - mapped.length));
+  }
+
+  console.log(`[Filter Debug] After filtering: ${mapped.length} places kept`);
+  console.log(`[Filter Debug] Top 3 scored places:`, mapped.slice(0, 3));
+
+  return mapped;
 }
 
 module.exports = { scoreAndFilterPlaces, haversineDistanceMeters };
