@@ -4,36 +4,61 @@ const visionClient = new vision.ImageAnnotatorClient({
   keyFilename: process.env.GOOGLE_VISION_KEYFILE,
 });
 
-async function analyzeImageLabels(imageUrl, topN = 5) {
-  if (!imageUrl) {
-    console.warn("[Vision Debug] No imageUrl provided");
-    return [];
+
+async function analyzeImageLabels(image, isBuffer = false) {
+  if (!image) {
+    console.warn("[Vision Debug] No image provided");
+    return { candidates: [], debug: {} };
   }
 
-  try {
-    const [result] = await visionClient.labelDetection(imageUrl);
+  console.log(`[Vision Debug] Starting analysis for image`);
 
-    if (!result) {
-      console.warn("[Vision Debug] No result returned from labelDetection");
-      return [];
+  try {
+    const request = {
+      image: isBuffer
+        ? { content: image }
+        : { source: { imageUri: image } },
+      features: [
+        { type: "LABEL_DETECTION", maxResults: 10 },
+        { type: "WEB_DETECTION", maxResults: 10 },
+        { type: "OBJECT_LOCALIZATION", maxResults: 10 },
+      ],
+    };
+
+    // Annotate image
+    const [response] = await visionClient.batchAnnotateImages({ requests: [request] });
+
+    const res = response.responses[0];
+    if (!res) {
+      console.warn("[Vision Debug] No response from Vision API");
+      return { candidates: [], debug: {} };
     }
 
+    // Collect candidates
+    const candidates = [];
+    if (res.labelAnnotations) res.labelAnnotations.forEach(l => l.description && candidates.push(l.description));
+    if (res.webDetection?.webEntities) res.webDetection.webEntities.forEach(e => e.description && candidates.push(e.description));
+    if (res.localizedObjectAnnotations) res.localizedObjectAnnotations.forEach(o => o.name && candidates.push(o.name));
 
-    const labels = (result.labelAnnotations || [])
-      .sort((a, b) => (b.score || 0) - (a.score || 0))
-      .slice(0, topN)
-      .map((l) => ({
-        description: l.description,
-        score: l.score,
-      }));
+    // Prepare debug info
+    const debug = {
+      topLabels: (res.labelAnnotations || [])
+        .slice(0, 5)
+        .map(l => `${l.description}:${l.score?.toFixed(2) || '0.00'}`),
+      topWeb: (res.webDetection?.webEntities || [])
+        .slice(0, 5)
+        .map(e => `${e.description}:${e.score?.toFixed(2) || '0.00'}`),
+      topObjects: (res.localizedObjectAnnotations || [])
+        .slice(0, 5)
+        .map(o => `${o.name}:${o.score?.toFixed(2) || '0.00'}`),
+    };
 
+    console.log("[Vision Debug] Candidates:", candidates);
+    console.log("[Vision Debug] Debug info:", debug);
 
-    return labels;
+    return { candidates, debug };
   } catch (err) {
-    console.error(
-      "[Vision Debug] visionService.analyzeImageLabels error:",
-      err.message || err
-    );
+    console.error("[Vision Debug] Error in analyzeBufferOrUrl:", err.message || err);
     throw err;
   }
 }

@@ -34,8 +34,10 @@ const googleAuthRoute = require("./routes/authRoute/loginWithGoogle");
 const userProfileRoute = require("./routes/profileRoute/userProfileRoute");
 const problemRoute = require("./routes/problemFindRoute/problemRoute");
 const requestHistoryRoute = require("./routes/requestHistory/requestRoute");
+const { apiLimiter, authLimiter } = require("./middleware/limitConfig");
 
-app.use("/api/auth", authRoutes, googleAuthRoute);
+app.use("/api", apiLimiter);
+app.use("/api/auth",authLimiter, authRoutes, googleAuthRoute);
 app.use(
   "/api/user",
   checkForAuthenticationCookie("token"),
